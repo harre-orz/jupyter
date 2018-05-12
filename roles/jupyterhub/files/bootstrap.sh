@@ -14,15 +14,12 @@ for ext in freeze toc2; do
   jupyter nbextension enable $ext/main --user
 done
 
-
-mkdir -p ~/.git/info
-
-cat <<EOF > ~/.git/config
+[ -f ~/.gitconfig ] || cat <<EOF > ~/.gitconfig
 [filter "clean_ipynb"]
-  clean = jq --indent 1 --monochrome-output '. + if .metadata.git.suppress_outputs | not then { cells: [.cells[] | . + if .cell_type == \"code\" then { outputs: [], execution_count: null } else {} end ] } else {} end'
-  smudge = cat
+    clean = jq --indent 1 --monochrome-output '. + if .metadata.git.suppress_outputs | not then { cells: [.cells[] | . + if .cell_type == \"code\" then { outputs: [], execution_count: null } else {} end ] } else {} end'
+    smudge = cat
 EOF
 
-cat <<EOF > ~/.git/info/attributes
+[ -f ~/.gitattributes ] || cat <<EOF > ~/.gitattributes
 *.ipynb  filter=clean_ipynb
 EOF
