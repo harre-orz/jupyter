@@ -1,0 +1,13 @@
+---
+
+- name: <archlinux> install base packages
+  pacman:
+    state: present
+    name: "{{ item }}"
+    update_cache: yes
+  with_items:
+    - python-pip
+    - npm
+    - curl
+    - git
+    - jq

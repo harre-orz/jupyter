@@ -1,0 +1,23 @@
+---
+
+- name: <centos> install IUS repo
+  yum:
+    state: present
+    name: https://centos7.iuscommunity.org/ius-release.rpm
+
+- name: <centos> install base packages
+  yum:
+    state: present
+    name: "{{ item }}"
+  with_items:
+    - python36u-pip
+    - npm
+    - curl
+    - git
+    - jq
+
+- name: <centos> symlink pip3.6 to pip3
+  file:
+    state: link
+    src: /usr/bin/pip3.6
+    path: /usr/local/bin/pip3

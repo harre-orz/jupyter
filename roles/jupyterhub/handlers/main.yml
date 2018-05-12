@@ -1,0 +1,7 @@
+---
+
+- name: restart jupyterhub
+  service:
+    state: restarted
+    name: jupyterhub
+    daemon_reload: yes

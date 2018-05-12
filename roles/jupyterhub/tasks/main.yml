@@ -1,0 +1,97 @@
+---
+
+- name: is-disabled SELinux
+  shell: "! $(which selinuxenabled && selinuxenabled)"
+  changed_when: False
+
+- include: debian-9.yml
+  when: ansible_distribution == "Debian" and ansible_distribution_major_version == "9"
+
+- include: centos.yml
+  when: ansible_distribution == "CentOS"
+
+- include: archlinux.yml
+  when: ansible_distribution == "Archlinux"
+
+- name: install pip3 packages
+  pip:
+    state: present
+    name: "{{ item }}"
+    executable: pip3
+  with_items:
+    - pip
+    - setuptools
+    - ansible
+    - bash_kernel
+    - notebook
+    - jupyterhub
+    - jupyter_contrib_nbextensions
+    - git+https://github.com/NII-cloud-operation/Jupyter-multi_outputs
+
+- name: create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/ansible
+    - /etc/jupyterhub
+
+- name: download default ansible.cfg
+  get_url:
+    url: https://raw.githubusercontent.com/ansible/ansible/devel/examples/ansible.cfg
+    dest: /etc/ansible/ansible.cfg
+
+- name: modify ansible.cfg
+  lineinfile:
+    path: /etc/ansible/ansible.cfg
+    regexp: "^#?ssh_args "
+    line: ssh_args = -o ControlMaster=auto -o ControlPersist=60s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+
+- name: put jupyterhub_config.py
+  copy:
+    src: files/jupyterhub_config.py
+    dest: /etc/jupyterhub/
+    mode: 0700
+  notify: restart jupyterhub
+
+- name: put bootstrap.sh
+  copy:
+    src: files/bootstrap.sh
+    dest: /etc/jupyterhub/
+    mode: 0775
+
+- name: install npm packages
+  npm:
+    state: present
+    name: "{{ item }}"
+    global: yes
+  with_items:
+    - configurable-http-proxy
+
+- name: which jupyterhub
+  shell: which jupyterhub
+  register: which_jupyterhub
+  changed_when: False
+
+- name: <systemd> put jupyterhub.service
+  copy:
+    dest: /etc/systemd/system/jupyterhub.service
+    content: |
+      [Unit]
+      Description = Jupyterhub
+
+      [Service]
+      ExecStart = {{ which_jupyterhub.stdout }} --config=/etc/jupyterhub/jupyterhub_config.py
+      Restart = always
+      Type = simple
+
+      [Install]
+      WantedBy = multi-user.target
+  when: ansible_service_mgr == "systemd"
+  notify: restart jupyterhub
+
+- name: start jupyterhub
+  service:
+    state: started
+    name: jupyterhub
+    daemon_reload: yes

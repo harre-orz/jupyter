@@ -1,0 +1,34 @@
+---
+
+- name: <debian-9> install base packages
+  apt:
+    state: present
+    name: "{{ item }}"
+    update_cache: yes
+  with_items:
+    - apt-transport-https
+    - python3-pip
+    - curl
+    - git
+    - jq
+
+- name: <debian-9> adding the NodeSource signing key to your keyring...
+  apt_key:
+    state: present
+    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+
+- name: <debian-9> creating apt sources list file for the NodeSource Node.js v9.x repo...
+  lineinfile:
+    state: present
+    path: /etc/apt/sources.list.d/nodesource.list
+    line: "{{ item }}"
+    create: yes
+  with_items:
+    - deb https://deb.nodesource.com/node_9.x stretch main
+    - deb-src https://deb.nodesource.com/node_9.x stretch main
+
+- name: <debian-9> install nodejs
+  apt:
+    state: present
+    name: nodejs
+    update_cache: yes

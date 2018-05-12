@@ -1,0 +1,6 @@
+---
+
+- hosts: jupyterhub
+  become: yes
+  roles:
+    - jupyterhub
