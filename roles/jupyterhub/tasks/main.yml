@@ -94,4 +94,5 @@
   service:
     state: started
     name: jupyterhub
+    enabled: yes
     daemon_reload: yes
