@@ -16,8 +16,11 @@
     - git
     - jq
 
-- name: <centos> symlink pip3.6 to pip3
+- name: <centos> symlink python
   file:
     state: link
-    src: /usr/bin/pip3.6
-    path: /usr/local/bin/pip3
+    src: "/usr/bin/{{ item }}3.6"
+    path: "/usr/local/bin/{{ item }}3"
+  with_items:
+    - python
+    - pip
