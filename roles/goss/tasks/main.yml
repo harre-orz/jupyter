@@ -1,0 +1,17 @@
+---
+
+- name: download goss
+  get_url:
+    url: https://github.com/aelsabbahy/goss/releases/download/v0.3.5/goss-linux-386
+    dest: /usr/local/bin/goss
+    mode: 0755
+
+- name: directory
+  file:
+    path: /etc/goss/
+    state: directory
+
+- name: copy
+  copy:
+    src: files/goss.yaml
+    dest: /etc/goss/goss.yaml

@@ -3,4 +3,5 @@
 - hosts: jupyterhub
   become: yes
   roles:
+    - goss
     - jupyterhub

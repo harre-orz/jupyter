@@ -11,3 +11,8 @@
     - curl
     - git
     - jq
+
+- name: <archlinux> set vars depend on OS
+  set_fact:
+    bin_pip3: "/usr/bin/pip3"
+    bin_jupyterhub: "/usr/bin/jupyterhub"
