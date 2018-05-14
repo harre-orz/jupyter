@@ -5,13 +5,31 @@
     url: https://github.com/aelsabbahy/goss/releases/download/v0.3.5/goss-linux-386
     dest: /usr/local/bin/goss
     mode: 0755
-
-- name: directory
+    
+- name: create directories
   file:
-    path: /etc/goss/
+    path: "{{ item }}"
     state: directory
+  with_items:
+    - /etc/goss.d/
 
-- name: copy
+- name: install ansible goss modules
+  get_url:
+    url: https://raw.githubusercontent.com/indusbox/goss-ansible/1.0.0/goss.py
+    dest: /usr/share/ansible/
+    mode: 0755
+
+- name: put goss.yml
   copy:
-    src: files/goss.yaml
-    dest: /etc/goss/goss.yaml
+    dest: /etc/goss.yml
+    content: |
+      gossfile:
+        /etc/goss.d/*.yml: {}
+  tags:
+    - goss
+
+- name: run goss
+  goss:
+    path: /etc/goss.yml
+  tags:
+    - goss

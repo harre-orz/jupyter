@@ -6,6 +6,8 @@ exec > ~/bootstrap.log 2>&1
 
 set -x
 
+cp -a /etc/jupyterhub/99-requires.py ~/.ipython/profile_default/startup/
+
 #python3 -m bash_kernel.install
 jupyter contrib nbextension install --user
 jupyter nbextension enable widgetsnbextension --user --py

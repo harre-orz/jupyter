@@ -37,17 +37,25 @@
   with_items:
     - /etc/ansible
     - /etc/jupyterhub
+    - /usr/share/ansible
+    - /usr/share/jupyterhub/startup
 
 - name: download default ansible.cfg
   get_url:
     url: https://raw.githubusercontent.com/ansible/ansible/devel/examples/ansible.cfg
     dest: /etc/ansible/ansible.cfg
 
-- name: modify ansible.cfg
+- name: modify ssh_args in ansible.cfg
   lineinfile:
     path: /etc/ansible/ansible.cfg
     regexp: "^#?ssh_args "
     line: ssh_args = -o ControlMaster=auto -o ControlPersist=60s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+
+- name: modify library in ansible.cfg
+  lineinfile:
+    path: /etc/ansible/ansible.cfg
+    regexp: "^#?library "
+    line: library = /usr/share/ansible/
 
 - name: put jupyterhub_config.py
   copy:
@@ -56,11 +64,14 @@
     mode: 0700
   notify: restart jupyterhub
 
-- name: put bootstrap.sh
+- name: put script files
   copy:
-    src: files/bootstrap.sh
+    src: "files/{{ item }}"
     dest: /etc/jupyterhub/
-    mode: 0775
+    mode: 0755
+  with_items:
+    - bootstrap.sh
+    - 99-requires.py
 
 - name: install npm packages
   npm:
@@ -93,3 +104,19 @@
     name: jupyterhub
     enabled: yes
     daemon_reload: yes
+
+- name: put goss_jupyterhub.yml
+  copy:
+    dest: /etc/goss.d/goss_jupyterhub.yml
+    content: |
+      service:
+        jupyterhub:
+          enabled: true
+          running: true
+      port:
+        tcp6:8000:
+          listening: true
+          ip:
+            - '::'
+  tags:
+    - goss
