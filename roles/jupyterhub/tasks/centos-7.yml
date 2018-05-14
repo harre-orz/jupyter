@@ -1,0 +1,22 @@
+---
+
+- name: <centos-7> install IUS repo
+  yum:
+    state: present
+    name: https://centos7.iuscommunity.org/ius-release.rpm
+
+- name: <centos-7> install base packages
+  yum:
+    state: present
+    name: "{{ item }}"
+  with_items:
+    - python36u-pip
+    - npm
+    - curl
+    - git
+    - jq
+
+- name: <centos-7> set vars depend on OS
+  set_fact:
+    bin_pip3: "/usr/bin/pip36"
+    bin_jupyterhub: "/usr/bin/jupyterhub"

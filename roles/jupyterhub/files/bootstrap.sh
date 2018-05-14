@@ -6,11 +6,13 @@ exec > ~/bootstrap.log 2>&1
 
 set -x
 
-python3 -m bash_kernel.install
+#python3 -m bash_kernel.install
 jupyter contrib nbextension install --user
+jupyter nbextension enable widgetsnbextension --user --py
 jupyter nbextension install lc_multi_outputs --user --py
 jupyter nbextension enable lc_multi_outputs --user --py
-for ext in freeze toc2; do
+jupyter run-through quick-setup --user --py
+for ext in collapsible_headings toc2; do
   jupyter nbextension enable $ext/main --user
 done
 
