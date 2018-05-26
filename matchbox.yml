@@ -5,3 +5,7 @@
   roles:
     - goss
     - coreos-matchbox
+
+- hosts: matchbox
+  roles:
+    - coreos-terraform

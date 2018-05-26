@@ -137,19 +137,6 @@
     enabled: yes
     daemon_reload: yes
 
-- name: install terraform-provider-matchbox
-  shell: go get -u github.com/coreos/terraform-provider-matchbox
-  args:
-    creates: ~/go/bin/terraform-provider-matchbox
-
-- name: put ~/.terraformrc
-  copy:
-    dest: ~/.terraformrc
-    content: |
-      providers {
-        matchbox = "/root/go/bin/terraform-provider-matchbox"
-      }
-
 - name: put goss_matchbox.yml
   copy:
     dest: /etc/goss.d/goss_matchbox.yml

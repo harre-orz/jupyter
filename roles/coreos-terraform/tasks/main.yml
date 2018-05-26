@@ -1,0 +1,51 @@
+---
+
+- name: get home dir
+  shell: "getent passwd {{ ansible_ssh_user }} | cut -d: -f6"
+  changed_when: False
+  register: ansible_home_result
+
+- name: set home dir
+  set_fact:
+    ansible_home: "{{ ansible_home_result.stdout }}"
+
+- name: install terraform-provider-matchbox
+  become: no
+  shell: go get -u github.com/coreos/terraform-provider-matchbox
+  args:
+    creates: "{{ ansible_home }}/go/bin/terraform-provider-matchbox"
+
+- name: get ssh public key
+  shell: "cat {{ ansible_home }}/.ssh/id_rsa.pub | head -1"
+  changed_when: False
+  register: ssh_public_key_result
+
+- name: set ssh public key
+  set_fact:
+    ssh_public_key: "{{ ssh_public_key_result.stdout }}"
+
+- name: create directories
+  become: no
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ ansible_home }}/.matchbox"
+    - "{{ ansible_home }}/terraform/simple-install"
+
+- name: terraform for simple-install
+  become: no
+  template:
+    src: "{{ item }}"
+    dest: "{{ ansible_home }}/terraform/simple-install/{{ item | basename }}"
+  with_fileglob:
+    - simple-install/*
+
+- name: put ~/.terraformrc
+  become: no
+  copy:
+    dest: "{{ ansible_home }}/.terraformrc"
+    content: |
+      providers {
+        matchbox = "{{ ansible_home }}/go/bin/terraform-provider-matchbox"
+      }

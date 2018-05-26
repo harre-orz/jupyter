@@ -27,8 +27,7 @@
     - jupyterhub
     - jupyter_contrib_nbextensions
     - ipywidgets
-    - git+https://github.com/NII-cloud-operation/Jupyter-LC_run_through
-    - git+https://github.com/NII-cloud-operation/Jupyter-multi_outputs
+    - git+https://github.com/harre-orz/Jupyter-multi_outputs
 
 - name: create directories
   file:

@@ -13,7 +13,6 @@ jupyter contrib nbextension install --user
 jupyter nbextension enable widgetsnbextension --user --py
 jupyter nbextension install lc_multi_outputs --user --py
 jupyter nbextension enable lc_multi_outputs --user --py
-jupyter run-through quick-setup --user --py
 for ext in collapsible_headings toc2; do
   jupyter nbextension enable $ext/main --user
 done
