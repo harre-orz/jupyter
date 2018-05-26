@@ -1,0 +1,8 @@
+---
+
+- name: restart matchbox
+  service:
+    name: matchbox
+    state: restarted
+    enabled: yes
+    daemon_reload: yes

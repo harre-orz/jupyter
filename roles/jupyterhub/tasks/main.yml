@@ -118,5 +118,17 @@
           listening: true
           ip:
             - '::'
+        tcp:8001:
+          listening: true
+          ip:
+            - '127.0.0.1'
+        tcp:8002:
+          listening: true
+          ip:
+            - '127.0.0.1'
   tags:
     - goss
+
+- name: run goss
+  goss:
+    path: /etc/goss.d/goss_jupyterhub.yml

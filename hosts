@@ -1,6 +1,10 @@
 [jupyterhub]
 192.168.173.162
 
+[matchbox]
+192.168.173.162 hostname=matchbox.local dhcp_begin=192.168.173.100 dhcp_end=192.168.173.120
+
+
 [all:vars]
 ansible_ssh_private_key_file=~/.ssh/id_rsa
 ansible_sudo_pass=osboxes.org

@@ -1,0 +1,7 @@
+---
+
+- hosts: matchbox
+  become: yes
+  roles:
+    - goss
+    - coreos-matchbox

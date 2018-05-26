@@ -27,9 +27,3 @@
         /etc/goss.d/*.yml: {}
   tags:
     - goss
-
-- name: run goss
-  goss:
-    path: /etc/goss.yml
-  tags:
-    - goss

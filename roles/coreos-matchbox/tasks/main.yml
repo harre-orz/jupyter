@@ -1,0 +1,189 @@
+---
+
+- name:  set vars matchbox_base
+  set_fact:
+    matchbox_base: "matchbox-v0.7.0-linux-amd64"
+    
+- name: download matchbox pacakge
+  unarchive:
+    src: "https://github.com/coreos/matchbox/releases/download/v0.7.0/{{ matchbox_base }}.tar.gz"
+    dest: ~/
+    remote_src: yes
+    owner: root
+    group: root
+
+- name: install matchbox
+  copy:
+    src: "~/{{ matchbox_base }}/matchbox"
+    dest: /usr/local/bin/matchbox
+    remote_src: yes
+    mode: 755
+  notify: restart matchbox
+
+- name: create matchbox user
+  user:
+    name: matchbox
+
+- name: <systemd> put matchbox.service
+  copy:
+    dest: /etc/systemd/system/matchbox.service
+    content: |
+      [Unit]
+      Description=CoreOS matchbox Server
+      Documentation=https://github.com/coreos/matchbox
+
+      [Service]
+      User=matchbox
+      Group=matchbox
+      Environment="MATCHBOX_ADDRESS=0.0.0.0:8080"
+      Environment="MATCHBOX_RPC_ADDRESS=0.0.0.0:8081"
+      Environment="MATCHBOX_LOG_LEVEL=debug"
+      ExecStart=/usr/local/bin/matchbox
+
+      # systemd.exec
+      ProtectHome=yes
+      ProtectSystem=full
+
+      [Install]
+      WantedBy=multi-user.target
+  when: ansible_service_mgr == "systemd"
+  notify: restart matchbox
+  
+- name: export SAN
+  debug:
+    msg: "SAN=DNS.1:{{ hostname }},IP.1:{{ ansible_host }}"
+
+- name: generate TLS Certificates
+  shell: "SAN=DNS.1:{{ hostname }},IP.1:{{ ansible_host }} ./cert-gen"
+  args:
+    chdir: "~/{{ matchbox_base }}/scripts/tls"
+    creates: "~/{{ matchbox_base }}/scripts/tls/client.key"
+
+- name: create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: matchbox
+    group: matchbox
+  with_items:
+    - /var/lib/matchbox/assets
+    - /etc/matcdhbox
+
+- name: copy TLS Certificates
+  copy:
+    src: "~/{{ matchbox_base }}/scripts/tls/{{ item }}"
+    dest: "/etc/matchbox/{{ item }}"
+    owner: matchbox
+    group: matchbox
+    mode: 0600
+    remote_src: yes
+  with_items:
+    - ca.crt
+    - client.crt
+    - client.key
+    - server.crt
+    - server.key
+
+- name: install get-coreos
+  copy:
+    src: "~/{{ matchbox_base }}/scripts/get-coreos"
+    dest: "/usr/local/bin/"
+    mode: 0755
+    remote_src: yes
+
+- name: download CoreOS stable image
+  shell: get-coreos stable 1576.4.0 /var/lib/matchbox/assets
+  args:
+    creates: /var/lib/matchbox/assets/coreos/1576.4.0
+  become_user: matchbox
+
+- name: start matchbox
+  service:
+    name: matchbox
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: install packages
+  package:
+    name: "{{ item }}"
+  with_items:
+    - dnsmasq
+    - go
+    - terraform
+
+- name: put /etc/dnsmasq.conf
+  template:
+    src: templates/dnsmasq.conf.j2
+    dest: /etc/dnsmasq.conf
+
+- name: create /var/lib/tftpboot directory
+  file:
+    path: /var/lib/tftpboot
+    state: directory
+
+- name: download boot files
+  get_url:
+    url: "http://boot.ipxe.org/{{ item }}"
+    dest: "/var/lib/tftpboot/{{ item }}"
+  with_items:
+    - ipxe.efi
+    - undionly.kpxe
+
+- name: start dnsmasq
+  service:
+    name: dnsmasq
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: install terraform-provider-matchbox
+  shell: go get -u github.com/coreos/terraform-provider-matchbox
+  args:
+    creates: ~/go/bin/terraform-provider-matchbox
+
+- name: put ~/.terraformrc
+  copy:
+    dest: ~/.terraformrc
+    content: |
+      providers {
+        matchbox = "/root/go/bin/terraform-provider-matchbox"
+      }
+
+- name: put goss_matchbox.yml
+  copy:
+    dest: /etc/goss.d/goss_matchbox.yml
+    content: |
+      user:
+        matchbox:
+          exists: true
+      group:
+        matchbox:
+          exists: true
+      process:
+        matchbox:
+          running: true
+        dnsmasq:
+          running: true
+      service:
+        matchbox:
+          enabled: true
+          running: true
+        dnsmasq:
+          enabled: true
+          running: true
+      port:
+        tcp6:8080:
+          listening: true
+          ip:
+            - '::'
+        tcp6:8081:
+          listening: true
+          ip:
+            - '::'
+  tags:
+    - goss
+
+- name: run goss
+  goss:
+    path: /etc/goss.d/goss_matchbox.yml
