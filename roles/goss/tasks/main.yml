@@ -12,6 +12,7 @@
     state: directory
   with_items:
     - /etc/goss.d/
+    - /usr/share/ansible/
 
 - name: install ansible goss modules
   get_url:

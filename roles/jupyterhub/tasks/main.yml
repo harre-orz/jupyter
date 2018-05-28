@@ -129,6 +129,6 @@
   tags:
     - goss
 
-- name: run goss
-  goss:
-    path: /etc/goss.d/goss_jupyterhub.yml
+#- name: run goss
+#  goss:
+#    path: /etc/goss.d/goss_jupyterhub.yml
